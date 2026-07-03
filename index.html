@@ -1,0 +1,685 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>如何优化 AI 产品 — 从「度量」到全链路优化 · Leo · 京东健康</title>
+<style>
+  :root{
+    --red:#e1251b; --ink:#1f2733; --slate:#3b4657; --slate2:#6b7686;
+    --line:#e4e8ee; --bg:#f4f6f9; --card:#f7f9fb; --card2:#eef3f8;
+    --green:#2e9e5b; --yellow:#d9a300; --pink:#fff1f0;
+  }
+  *{box-sizing:border-box;margin:0;padding:0;}
+  html{scroll-behavior:smooth;}
+  body{
+    font-family:'JDLANGZHENGTI','京东朗正体','PingFang SC','Microsoft YaHei',
+      'Hiragino Sans GB','Source Han Sans SC',sans-serif;
+    background:var(--bg); color:var(--ink); line-height:1.7;
+  }
+  .wrap{max-width:920px;margin:0 auto;padding:0 24px;}
+  /* hero */
+  header.hero{background:linear-gradient(135deg,#20262e 0%,#2f3947 100%);color:#fff;padding:64px 0 52px;}
+  .hero .kicker{color:#ff6a5f;font-size:15px;letter-spacing:2px;margin-bottom:18px;}
+  .hero h1{font-size:46px;line-height:1.15;margin-bottom:16px;}
+  .hero .tagline{font-size:22px;color:#e6ebf2;}
+  .hero .tagline b{color:#ff6a5f;}
+  .hero .meta{margin-top:18px;font-size:15px;color:#aeb8c6;}
+  .hero .who{margin-top:34px;font-size:16px;color:#cfd6df;}
+  .hero .who b{color:#fff;font-size:19px;}
+  .hero .bio{margin-top:10px;font-size:14px;color:#9aa4b2;line-height:1.7;}
+  /* toc */
+  nav.toc{background:#fff;border-bottom:1px solid var(--line);padding:20px 0;font-size:14px;}
+  nav.toc h4{color:var(--slate2);font-size:13px;letter-spacing:1px;margin-bottom:10px;}
+  nav.toc ol{list-style:none;display:grid;grid-template-columns:repeat(3,1fr);gap:4px 22px;counter-reset:t;}
+  nav.toc li{counter-increment:t;}
+  nav.toc a{color:var(--slate);text-decoration:none;display:block;padding:2px 0;}
+  nav.toc a:hover{color:var(--red);}
+  nav.toc a::before{content:counter(t) ". ";color:var(--slate2);}
+  /* sections */
+  section.blk{background:#fff;border:1px solid var(--line);border-radius:14px;padding:30px 34px;margin:26px 0;}
+  section.blk h2{font-size:25px;color:var(--ink);line-height:1.3;margin-bottom:6px;padding-bottom:0;}
+  section.blk h2 .idx{color:var(--red);font-weight:700;margin-right:10px;}
+  .sub{font-size:16px;color:var(--slate2);margin-bottom:18px;}
+  .lead{background:var(--card2);border-left:5px solid var(--red);padding:13px 18px;border-radius:0 8px 8px 0;font-size:16px;color:var(--slate);margin:16px 0 0;}
+  .lead b,.note b{color:var(--red);}
+  .note{font-size:15.5px;color:var(--slate);margin:14px 0;}
+  .big-quote{font-size:24px;line-height:1.7;color:var(--ink);text-align:center;padding:12px 0;}
+  .big-quote b{color:var(--red);}
+  .cols{display:flex;gap:18px;flex-wrap:wrap;margin:14px 0;}
+  .cols>.col{flex:1;min-width:220px;}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:15px 18px;height:100%;}
+  .card h3{font-size:17px;color:var(--red);margin-bottom:8px;}
+  .card p,.card li{font-size:14.5px;color:var(--slate);}
+  .card ul{padding-left:18px;}
+  .num{display:inline-flex;width:24px;height:24px;border-radius:50%;background:var(--red);color:#fff;font-size:14px;align-items:center;justify-content:center;margin-right:7px;vertical-align:-3px;}
+  table{border-collapse:collapse;width:100%;font-size:14px;margin:14px 0;}
+  th,td{border:1px solid var(--line);padding:9px 12px;text-align:left;color:var(--slate);vertical-align:top;line-height:1.5;}
+  th{background:var(--slate);color:#fff;font-weight:600;}
+  tbody tr:nth-child(even){background:var(--card);}
+  td.k{font-weight:600;color:var(--ink);white-space:nowrap;}
+  .flow{display:flex;align-items:stretch;gap:0;flex-wrap:wrap;margin:14px 0;}
+  .flow .node{flex:1;min-width:90px;background:var(--card);border:1px solid var(--line);border-radius:9px;padding:11px 8px;text-align:center;font-size:13.5px;color:var(--ink);}
+  .flow .node.opt{background:var(--pink);border-color:#f6c9c6;}
+  .flow .arr{display:flex;align-items:center;color:var(--red);font-size:18px;padding:0 6px;}
+  .tag-g{color:var(--green);font-weight:600;}
+  .tag-y{color:var(--yellow);font-weight:600;}
+  .tag-r{color:var(--red);font-weight:600;}
+  .src{font-size:12px;color:#9aa4b2;line-height:1.55;margin-top:12px;border-top:1px dashed var(--line);padding-top:10px;}
+  .formula{text-align:center;font-size:17px;color:var(--ink);margin:10px 0;}
+  footer.foot{text-align:center;padding:40px 0 60px;color:var(--slate2);font-size:14px;}
+  footer.foot .big{font-size:30px;color:var(--ink);margin-bottom:8px;}
+  @media(max-width:680px){nav.toc ol{grid-template-columns:1fr 1fr;}.hero h1{font-size:34px;}}
+</style>
+</head>
+<body>
+
+<header class="hero"><div class="wrap">
+  <div class="kicker">京东健康 · AI 产品优化 · 内部培训</div>
+  <h1>如何优化 AI 产品</h1>
+  <div class="tagline">从「度量」到全链路优化：<b>先把尺子做对，再谈优化</b></div>
+  <div class="meta">度量驱动的方法论为主线　·　例子贯穿 电商 / 医疗 / 通用搜</div>
+  <div class="who"><b>Leo</b>　京东健康 AI 负责人 & 医疗健康大模型负责人</div>
+  <div class="bio">前菜鸟 AI 负责人　·　蚂蚁金服金融 AI 负责人 & 金融大模型负责人　·　SIGKDD 高级领域主席</div>
+</div></header>
+
+<nav class="toc"><div class="wrap">
+  <h4>目录</h4>
+  <ol>
+    <li><a href="#s2">一句话主张</a></li>
+    <li><a href="#s3">从一个最简单的 case 说起</a></li>
+    <li><a href="#s4">拆成三个核心问题</a></li>
+    <li><a href="#s5">关键词全景：服务链路 × 优化链路</a></li>
+    <li><a href="#s6">两种链路形态</a></li>
+    <li><a href="#s7">通用五维度</a></li>
+    <li><a href="#s8">场景化：预期决定尺子</a></li>
+    <li><a href="#s9">怎么刻画一个维度：四种方法</a></li>
+    <li><a href="#s10">Rubric 是什么</a></li>
+    <li><a href="#s11">GSB 是没办法的办法</a></li>
+    <li><a href="#s12">多维 merge：别用加权平均</a></li>
+    <li><a href="#s13">Failure Code</a></li>
+    <li><a href="#s14">召回 / Search</a></li>
+    <li><a href="#s15">LLM 生成</a></li>
+    <li><a href="#s16">RM 训练数据</a></li>
+    <li><a href="#s17">SFT → 蒸馏 → DPO → RL</a></li>
+    <li><a href="#s18">训练管线：先分「有没有」</a></li>
+    <li><a href="#s19">模仿家族：SFT/蒸馏/LoRA</a></li>
+    <li><a href="#s20">硬蒸馏</a></li>
+    <li><a href="#s21">On-Policy 蒸馏 OPD</a></li>
+    <li><a href="#s22">OPD 全景时间线</a></li>
+    <li><a href="#s23">OPD 最该记的几点</a></li>
+    <li><a href="#s24">离线偏好优化</a></li>
+    <li><a href="#s25">在线 RL</a></li>
+    <li><a href="#s26">GRPO</a></li>
+    <li><a href="#s27">怎么选 + 三个旋钮</a></li>
+    <li><a href="#s28">Agentic RL</a></li>
+    <li><a href="#s29">PE 优化</a></li>
+    <li><a href="#s30">PE 能力怎么收口</a></li>
+    <li><a href="#s31">Skill 优化</a></li>
+    <li><a href="#s32">Harness 升级（一）</a></li>
+    <li><a href="#s33">Harness 升级（二）</a></li>
+    <li><a href="#s34">知识层：活的 wiki</a></li>
+    <li><a href="#s35">记忆系统优化</a></li>
+    <li><a href="#s36">代码化</a></li>
+    <li><a href="#s37">五个真实医疗范例</a></li>
+    <li><a href="#s38">Reward Hacking</a></li>
+    <li><a href="#s39">后验校准</a></li>
+    <li><a href="#s40">GroundTruth 评测集</a></li>
+    <li><a href="#s41">刷榜</a></li>
+    <li><a href="#s42">正向：从零定义一个场景六步</a></li>
+    <li><a href="#s43">反向：badcase 全链路闭环</a></li>
+    <li><a href="#s44">总结与红线</a></li>
+  </ol>
+</div></nav>
+
+<main class="wrap">
+
+<section class="blk" id="s2">
+  <h2><span class="idx">01</span>一句话主张</h2>
+  <div class="big-quote">
+    模型怎么调、链路怎么改，方法千千万，但重要的是先把「<b>尺子</b>」做对。<br>
+    用户效用度量，是地图也是方向盘——<b>度量错了，优化越使劲，跑得越偏。</b>
+  </div>
+</section>
+
+<section class="blk" id="s3">
+  <h2><span class="idx">02</span>从一个最简单的 case 说起：用户心里在打分</h2>
+  <div class="sub">一个人在搜索框敲下："预算 3000 想给爸妈换手机，要屏幕大、续航久、好上手，选哪款？"</div>
+  <div class="cols">
+    <div class="col"><div class="card"><h3>他要的不是参数表</h3><p>而是和我处境一样的人（给老人买、图省心）真实买过什么、踩过哪些坑——借真实成交和评价做自己的购买决策。</p></div></div>
+    <div class="col"><div class="card"><h3>系统一两秒内做三件事</h3><p>召回真实成交 / 评价 / 导购笔记 → LLM 组织成贴合处境的推荐 → 呈现；他在心里默默打分，再用脚投票（下单 / 加购 / 退货）。</p></div></div>
+  </div>
+  <div class="lead">那个"分"我们看不见、没法直接优化——只能用一个模型去近似它，这就是 <b>Reward Model</b>。</div>
+</section>
+
+<section class="blk" id="s4">
+  <h2><span class="idx">03</span>于是"优化 AI 产品"拆成三个核心问题</h2>
+  <div class="lead" style="margin-top:0;margin-bottom:14px;">RM 是我们对"用户那把尺子"的近似，它就是模型做 RL 时的优化导向。</div>
+  <div class="cols">
+    <div class="col"><div class="card"><h3><span class="num">1</span>尺子怎么刻</h3><p>人类对内容的效用 / 质量如何度量？维度、档位、怎么合成一个分。</p></div></div>
+    <div class="col"><div class="card"><h3><span class="num">2</span>怎么教给模型</h3><p>模型如何拟合这把尺子（RM）？让计算机能替我们打出这个分。</p></div></div>
+    <div class="col"><div class="card"><h3><span class="num">3</span>尺子对不对</h3><p>线上真实用户认不认？后验行为与 AB 回头校准这把尺子。</p></div></div>
+  </div>
+  <div class="note">全篇就围绕这三件事：<b>刻尺子 → 教模型 → 用户验收</b>。</div>
+</section>
+
+<section class="blk" id="s5">
+  <h2><span class="idx">04</span>关键词全景：服务链路（线上）× 优化链路（离线）</h2>
+  <div class="sub">一条 query 从左到右流过的每个在线节点，背后都对应一组离线手段。</div>
+  <div class="flow">
+    <div class="node">提问</div><div class="arr">→</div>
+    <div class="node">召回 / Search</div><div class="arr">→</div>
+    <div class="node">LLM 生成</div><div class="arr">→</div>
+    <div class="node">答案呈现</div><div class="arr">→</div>
+    <div class="node">后验行为</div>
+  </div>
+  <div class="flow">
+    <div class="node opt">笔记源 / index<br>rerank / 软广过滤</div><div class="arr"></div>
+    <div class="node opt">RM 训练 / Rubric<br>prompt / SFT / RLHF</div><div class="arr"></div>
+    <div class="node opt">呈现 / 摘要<br>结构化策略</div><div class="arr"></div>
+    <div class="node opt">GroundTruth<br>Online AB / 校准</div>
+  </div>
+  <div class="note" style="text-align:center;">闭环 = 后验指标校准</div>
+  <div class="lead">服务链路决定用户此刻拿到的结果，优化链路决定每个节点的天花板。</div>
+</section>
+
+<section class="blk" id="s6">
+  <h2><span class="idx">05</span>两种链路形态：从「检索式」到「Agentic 循环式」</h2>
+  <div class="sub">同一个问题，链路从一次召回、线性走完，进化到多轮调工具、自己判断够没够。</div>
+  <div class="card" style="margin-bottom:12px;"><h3>经典检索式</h3>
+    <div class="flow" style="margin:6px 0 0;"><div class="node">提问</div><div class="arr">→</div><div class="node">召回 / 检索</div><div class="arr">→</div><div class="node">LLM 生成</div><div class="arr">→</div><div class="node">答案呈现</div></div></div>
+  <div class="card"><h3>Agentic 循环式</h3>
+    <div class="flow" style="margin:6px 0 0;"><div class="node">意图理解 + 规划</div><div class="arr">→</div><div class="node">工具调用<br>搜/读/执行/调 API</div><div class="arr">→</div><div class="node">观察结果</div><div class="arr">→</div><div class="node">反思<br>够了？对了？</div><div class="arr">→</div><div class="node">验证 → 产出<br><small>否 · 再来一轮</small></div></div></div>
+  <div class="lead">Reward Model 也随之升级：从只给最终答案打分（<b>结果奖励</b>），到每一轮都判断该不该继续（<b>过程奖励</b>）。</div>
+</section>
+
+<section class="blk" id="s7">
+  <h2><span class="idx">06</span>效果度量是地图和方向盘（一）：通用五维度</h2>
+  <div class="sub">人类怎么判断一个答案好不好——先有这五条，再谈场景化。</div>
+  <table>
+    <thead><tr><th>维度</th><th>通俗讲</th><th>电商 badcase</th><th>医疗 badcase</th></tr></thead>
+    <tbody>
+      <tr><td class="k">满足需求</td><td>有没有解决用户真正想问的</td><td>问"平价防晒"列一堆贵价大牌</td><td>问"能不能停药"只甩说明书、不给判断</td></tr>
+      <tr><td class="k">相关性</td><td>有没有跑题、过度延展</td><td>问防晒，答成护肤全流程科普</td><td>问感冒用药，答成疾病百科大全</td></tr>
+      <tr><td class="k">真实有用</td><td>符不符合事实、过不过期、缺不缺角</td><td>推荐已停产 / 改了配方的旧产品</td><td>引过期指南、剂量 / 单位写错</td></tr>
+      <tr><td class="k">信任感</td><td>用户信不信、推理连不连贯</td><td>清一色"网红同款"软广</td><td>该提示就医却含糊、编造把握</td></tr>
+      <tr><td class="k">阅读体验</td><td>啰不啰嗦、结构清不清晰</td><td>流水账，得自己扒出推荐哪款</td><td>满屏免责声明，真正建议被淹没</td></tr>
+    </tbody>
+  </table>
+  <div class="lead">通用维度只是起点——真正的难点在<b>场景化、怎么刻画、怎么 merge</b>。</div>
+</section>
+
+<section class="blk" id="s8">
+  <h2><span class="idx">07</span>效果度量（二）· 场景化：用户预期决定尺子怎么刻</h2>
+  <div class="sub">同一个答案，换个场景好坏完全不同——因为用户的预期不一样。</div>
+  <table style="font-size:13px;">
+    <thead><tr><th></th><th>电商导购搜</th><th>医疗问诊搜</th><th>通用知识搜</th><th>内容种草搜</th></tr></thead>
+    <tbody>
+      <tr><td class="k">用户要的</td><td>买到适合自己的对的东西</td><td>安全对症的处置 + 该不该就医</td><td>一个客观正确的事实</td><td>灵感 + 同类人的真实体验</td></tr>
+      <tr><td class="k">"真实"指</td><td>真实销量 / 评价、非刷单</td><td>合指南 / 共识、有循证、不臆断</td><td>符合事实、无幻觉</td><td>真人真事、非软广</td></tr>
+      <tr><td class="k">"权威"来自</td><td>真实成交 / 同类买家评价</td><td>临床指南 / 专家共识 / 权威机构</td><td>官方 / 专家</td><td>用过的同类人</td></tr>
+      <tr><td class="k">独有维度</td><td>适配（肤质/机型）· 性价比 · 避坑</td><td>安全性（红旗/禁忌）· 提示就医 · 不确定 abstain</td><td>完整 · 准确</td><td>种草感 · 人群匹配</td></tr>
+      <tr><td class="k">一票否决</td><td>刷单虚假评价 / 错价错参 / 推无货</td><td>误导用药 / 漏红旗 / 超范围下结论</td><td>事实错误</td><td>软广 / 编造</td></tr>
+    </tbody>
+  </table>
+  <div class="lead">没有"通用最优"，只有<b>场景最优</b>——脑中先有最优答案，才能做出超预期。</div>
+</section>
+
+<section class="blk" id="s9">
+  <h2><span class="idx">08</span>效果度量（三）· 怎么刻画一个维度：四种方法</h2>
+  <div class="sub">关键看它有多可稳定验证，从易到难分四类。</div>
+  <table>
+    <thead><tr><th>类型（易 → 难）</th><th>怎么打分</th><th>电商例子</th><th>医疗例子</th></tr></thead>
+    <tbody>
+      <tr><td class="k">有明确答案</td><td>直接判定，量一下就知道</td><td>商品在不在售、价格参数对不对</td><td>剂量/单位对不对、是否触禁忌清单</td></tr>
+      <tr><td class="k">线性可比</td><td>定清 0–4 档，照档打分</td><td>商品适配度（肤质/机型）、性价比</td><td>分诊紧急度、科普权威度（指南/共识）</td></tr>
+      <tr><td class="k">Rubric</td><td>拆成多条 criteria，逐条判定</td><td>这条评价是不是刷单、推荐够不够全</td><td>有没有漏红旗症状、是否提示就医、有无超范围</td></tr>
+      <tr><td class="k">GSB</td><td>好/平/差两两对比，只比相对优劣</td><td>"是不是让我更想下单"</td><td>"哪版更让患者放心、敢遵医嘱"</td></tr>
+    </tbody>
+  </table>
+  <div class="lead">度量定义不一定要走重流程：一个有判断力的 PM + 一段 prompt，就能产出 <b>v0</b>。</div>
+</section>
+
+<section class="blk" id="s10">
+  <h2><span class="idx">09</span>Rubric 是什么：维度 × 档位，不是一个抽象分</h2>
+  <div class="sub">把评判拆成多条 criteria，每条配一个明确判定档，而非拍一个抽象分。</div>
+  <div class="cols">
+    <div class="col"><div class="card"><h3><span class="num">1</span>维度（criteria）= 该看哪几条</h3>
+      <ul><li>是否按处境（肤质/机型/预算/尺码）匹配？</li><li>是否基于真实销量 / 评价，而非刷单 / 软广？</li><li>有没有避坑 / 适用边界（缺货、版本差异）？</li><li>看完能直接下单，还是"自己再看看"？</li></ul></div></div>
+    <div class="col"><div class="card"><h3><span class="num">2</span>档位（levels）= 每条怎么判</h3>
+      <ul><li><span class="tag-g">Green</span>：完全符合，可采纳</li><li><span class="tag-y">Yellow</span>：方向对，细节有瑕疵</li><li><span class="tag-r">Red</span>：错误或有害，必须拦截</li><li><b>Underconstrained</b>：信息不足，应主动说"不确定"</li></ul></div></div>
+  </div>
+  <div class="note">换到医疗：criteria = 是否核对剂量 / 禁忌、有无漏红旗、是否提示就医、信息不足是否 abstain；档位同样 Green / Yellow / Red / Underconstrained。</div>
+  <div class="lead">维度 × 档位拼出<b>失败的坐标</b>：错在哪条、错到哪一档。</div>
+</section>
+
+<section class="blk" id="s11">
+  <h2><span class="idx">10</span>GSB 是没办法的办法：能拆成 Rubric 的，尽量别停在 GSB</h2>
+  <div class="sub">GSB（好/平/差两两对比）只给一个整体偏好，代表"某种体验"，却不告诉你好在哪、错在哪——是最后才用的兜底。</div>
+  <div class="cols">
+    <div class="col"><div class="card"><h3>为什么会卡在 GSB</h3><ul><li>大概率不是事情不可拆，是缺这个领域的专家</li><li>例：「美」——只会说这个好看那个不好看，因为团队里没有美学专家</li><li>没人能说清标准，就只能两两对比</li></ul></div></div>
+    <div class="col"><div class="card"><h3>有专家，再主观也能拆成 Rubric</h3><ul><li>真专家总能给出 criteria：「美」美在哪</li><li>如：白底干净 / 45° 或斜角构图 / 留白比例⋯</li><li>每条再配 Green / Yellow / Red 档位</li></ul></div></div>
+  </div>
+  <div class="lead">想尽办法把 GSB 往 Rubric 转，是评测体系最重要的事之一——GSB 只该是<b>临时兜底</b>，不是终点。</div>
+</section>
+
+<section class="blk" id="s12">
+  <h2><span class="idx">11</span>效果度量（四）· 多维 merge：别用加权平均</h2>
+  <div class="sub">一条错误的建议，再流畅、结构再好，总分也不该高。</div>
+  <div class="cols">
+    <div class="col"><div class="card"><h3><span class="num">1</span>硬约束（一票否决）</h3><p>电商：刷单虚假好评、错价错参、推无货 / 停售品；医疗：误导用药、漏红旗、超范围下结论——分数直接压下去。</p></div></div>
+    <div class="col"><div class="card"><h3><span class="num">2</span>场景调权</h3><p>电商抬真实评价 / 适配 / 性价比；医疗抬安全性 / 循证 / 该就医提示；按品类 / 科室再微调权重。</p></div></div>
+    <div class="col"><div class="card"><h3><span class="num">3</span>叠主观分</h3><p>丰富度、结构、表达、简洁——锦上添花，但永远在硬约束之后。</p></div></div>
+  </div>
+  <div class="lead">线性加权是最差的选择：它会让"<b>漂亮的错误</b>"捞到高分。</div>
+</section>
+
+<section class="blk" id="s13">
+  <h2><span class="idx">12</span>Failure Code：把"用户的不满"结构化</h2>
+  <div class="note"><b>电商例：</b>问"预算 3000 给爸妈换手机"，却推一水儿商单"网红爆款"、还都是年轻人在用 → <b>软广未识别 + 人群不匹配</b>。<br>
+  <b>医疗例：</b>问"孩子发烧能吃这个药吗"，没核对年龄 / 剂量 / 禁忌就给肯定答复 → <b>剂量未校验 + 该 abstain 未 abstain</b>。</div>
+  <div class="cols">
+    <div class="col"><div class="card"><h3>Code 是"现象"，不是"根因"</h3><p>"软广"的根因可能在召回（捞进商单）、prompt（没要求排广告）、或 RM（没有软广维度）——要再往下归因。</p></div></div>
+    <div class="col"><div class="card"><h3>Code 的三个用处</h3><ul><li>组织评测集：用户眼里的问题解没解</li><li>组织训练集：专做对抗样本</li><li>做效果分析：指标掉了，哪个 Code 在作怪</li></ul></div></div>
+  </div>
+  <div class="lead">好 Code：<b>可观察、判定一致、与效果直接相关、能拿来训 RM</b>。</div>
+</section>
+
+<section class="blk" id="s14">
+  <h2><span class="idx">13</span>召回 / Search：答案的"原材料"，是效果的天花板</h2>
+  <div class="sub">典型 garbage in, garbage out——召回上来的就不对，后面再强也救不回。</div>
+  <div class="cols">
+    <div class="col"><div class="card"><h3>失败模式</h3><ul><li>电商：召回刷单软广、人群不匹配、过期促销</li><li>医疗：召回过期指南、非权威网帖、个例当通则</li><li>只召一边倒好评，漏掉避坑帖 / 禁忌</li></ul></div></div>
+    <div class="col"><div class="card"><h3>理想态 &amp; 离线手段</h3><ul><li>电商：真实 · 对人群 · 不过期 · 覆盖全</li><li>医疗：优先现行指南 / 共识 / 权威库</li><li>rerank 把最该被信任的排到前面</li></ul></div></div>
+  </div>
+  <div class="lead">召<b>真实成交 / 真实评价 / 优质导购笔记</b>，而非刷单软文、无货链接、过期促销。</div>
+</section>
+
+<section class="blk" id="s15">
+  <h2><span class="idx">14</span>LLM 生成：把多篇经验拧成决策建议，锚点是 Reward Model</h2>
+  <div class="cols">
+    <div class="col"><div class="card"><h3>这一步在干什么</h3><p>大模型拿用户问题 + 召回笔记，综合成一段贴合处境的建议——谁适合、坑在哪、怎么选。这是用户唯一直接看到的东西。</p></div></div>
+    <div class="col"><div class="card"><h3>RM = 整个优化的"方向盘"</h3><p>RM 在很大程度上就是模型做 RL 时的 <b>label</b>：它给什么样的答案打高分，模型就往哪个方向长。</p></div></div>
+  </div>
+  <div class="lead">同样一批笔记，可以"帮你把决定做完"，也可以是"<b>正确的废话</b>"——一大半压在这一步。</div>
+</section>
+
+<section class="blk" id="s16">
+  <h2><span class="idx">15</span>RM 训练数据：把效果度量翻译成模型能学的样本</h2>
+  <table>
+    <thead><tr><th>类型</th><th>怎么来</th><th>价值 &amp; 注意</th></tr></thead>
+    <tbody>
+      <tr><td class="k">人工标注</td><td>高价值 case / 典型 badcase / AB diff / 仲裁样本</td><td>量不一定多，但必须干净</td></tr>
+      <tr><td class="k">Pairwise 偏好</td><td>A vs B 谁更好 + 为什么</td><td>相对序比绝对分稳；多喂 hard negative</td></tr>
+      <tr><td class="k">大模型合成</td><td>M 模型各生成 N 条，再挑最好的</td><td>今天最重要的来源，但有系统性偏差</td></tr>
+      <tr><td class="k">Code 专项</td><td>某类 badcase 攒成专项集（如"软广未识别"）</td><td>让模型学会识别典型错误</td></tr>
+    </tbody>
+  </table>
+  <div class="lead">合成的坑：LLM 当裁判偏爱长、偏爱结构化、对事实错误不敏感——软广常写得比真帖还"专业"，<b>绝不能自产自销，必须独立校验</b>。</div>
+</section>
+
+<section class="blk" id="s17">
+  <h2><span class="idx">16</span>怎么把模型推向这把尺子：SFT → 蒸馏 → DPO → RL</h2>
+  <div class="sub">一条主线：从模仿标准答案，到模仿强教师，到对齐"为什么 A 比 B 好"，再到自己探索更优。</div>
+  <table style="font-size:13px;">
+    <thead><tr><th>方式</th><th>怎么训</th><th>优点</th><th>缺点 / 坑</th></tr></thead>
+    <tbody>
+      <tr><td class="k">SFT 监督微调</td><td>模仿高质量答案（标准答案）</td><td>简单稳、快定基线行为</td><td>偏记忆、泛化弱于 RL；天花板 = 标注，不会自我超越</td></tr>
+      <tr><td class="k">MOPD 蒸馏</td><td>用更强教师 / Best-of-N 选优的输出当目标，蒸给学生</td><td>稳、便宜；把大模型 / 采样能力平移到线上小模型</td><td>天花板 = 教师；学不到教师之外；继承教师偏差</td></tr>
+      <tr><td class="k">DPO 直接偏好优化</td><td>拿 pairwise（A &gt; B）直接优化，不显式训 RM、不在线采样</td><td>工程简单、稳、省一个 RM</td><td>纯离线、OOD 泛化弱；难做硬约束 / 多目标</td></tr>
+      <tr><td class="k">RL (RLHF/PPO/GRPO)</td><td>用 RM 当 reward，在线采样迭代策略</td><td>探索、泛化强；对齐尺子、适配多目标</td><td>贵、不稳；RM 抓到伪特征 → 过优化 / reward hacking</td></tr>
+    </tbody>
+  </table>
+  <div class="note">训练还有什么：RLAIF（AI 反馈替代人标）· 过程奖励 PRM（给推理每一步打分）· KTO / ORPO（偏好优化变体）· 课程学习 / hard example 重采样。</div>
+  <div class="src">来源：DPO arXiv:2305.18290（NeurIPS'23）· 蒸馏 Hinton arXiv:1503.02531 · SFT vs RL 泛化 arXiv:2501.17161（ICML'25）· Reward hacking / 过优化 arXiv:2402.09345</div>
+</section>
+
+<section class="blk" id="s18">
+  <h2><span class="idx">17</span>训练管线：先分清基模「有没有」，再决定怎么训</h2>
+  <div class="sub">别一上来就训。先问：这个能力基模到底有没有——答案决定用哪种训练方式。</div>
+  <div class="cols">
+    <div class="col"><div class="card"><h3><span class="num">1</span>过滤已具备</h3><p>基模已经会的，别花训练预算重教——先测出来，从训练集里踢掉。</p></div></div>
+    <div class="col"><div class="card"><h3><span class="num">2</span>高采样探边界</h3><p>对剩下的大量采样（pass@k / Best-of-N）：能采到对的 → 已具备，只是激发/稳定差；怎么都采不到 → 真不具备。</p></div></div>
+    <div class="col"><div class="card"><h3><span class="num">3</span>分而治之</h3><p>激发/稳定问题 → RL 直接拉稳；真不具备 → SFT 冷启动注入种子，再交给 RL。</p></div></div>
+  </div>
+  <div class="lead">SFT 只用于 <b>cold start</b>：除冷启动外不做 SFT——SFT 偏记忆、会侵蚀基模已有的泛化，提升与稳定都交给 RL。</div>
+</section>
+
+<section class="blk" id="s19">
+  <h2><span class="idx">18</span>模仿家族：SFT · 蒸馏 · LoRA ——原理、关键参数、怎么调</h2>
+  <div class="sub">都是模仿已有答案的范式：快、稳、可控，但天花板 ≈ 被模仿对象，主要用来冷启动。</div>
+  <table style="font-size:13px;">
+    <thead><tr><th>方式</th><th>原理</th><th>最重要参数 · 经验值</th><th>调大 / 调小的影响</th></tr></thead>
+    <tbody>
+      <tr><td class="k">SFT 监督微调</td><td>直接模仿高质量答案</td><td>学习率 1e-5 ∼ 2e-5；轮数 1–3</td><td>LR 高 → 遗忘/震荡；轮数多 → 记忆、丢泛化</td></tr>
+      <tr><td class="k">蒸馏</td><td>学更强教师的输出（序列级 KD / 拒绝采样）</td><td>温度 T；教师质量</td><td>T 高 → 学到更软的分布；天花板 = 教师</td></tr>
+      <tr><td class="k">LoRA 低秩微调</td><td>冻结主干，只训低秩增量 ∆W=BA</td><td>秩 r = 8∼64；α≈2r；LR 1e-4∼3e-4</td><td>r 大 → 容量↑但易过拟合；α/r 控更新幅度</td></tr>
+    </tbody>
+  </table>
+  <div class="lead">QLoRA = 4-bit 量化基座 + LoRA，单卡可训；LoRA 适配器可热插拔做多任务，但极复杂能力仍需全参训练。</div>
+</section>
+
+<section class="blk" id="s20">
+  <h2><span class="idx">19</span>硬蒸馏：一步拿到顶级能力，代价是打崩原生推理——不推荐裸用</h2>
+  <div class="sub">把 SOTA 老师模型（或多模型投票）的「推理 → 结果」整段拽出来，直接 SFT 进基模。</div>
+  <div class="cols">
+    <div class="col"><div class="card"><h3>好处</h3><ul><li>一步到位：瞬间获得接近老师的顶级能力</li><li>工程极简、见效最快</li></ul></div></div>
+    <div class="col"><div class="card"><h3>坏处（为什么不推荐裸用）</h3><ul><li>强灌老师的 token，基模原生推理方式被打崩</li><li>学到「形」丢了「神」，OOD 一塌；后续 RL 也难救</li></ul></div></div>
+  </div>
+  <div class="note"><b>怎么既拿能力又保住推理？没有标准答案，三条伤害更小的路径：</b><br>
+  <b>1 少量 SFT 做 cold start + RL 激发：</b>只灌极少老师数据起步，能力靠 RL 逼出来。RL 本质是把 pass@k 拉成 pass@1——只要采样里激发过一次对的，就能放大。<br>
+  <b>2 自补 CoT：</b>正确答案摆在那，但让待训基模自己补出推理链（拒绝采样留对的），用自己的推理方式而非老师的。<br>
+  <b>3 两者结合：</b>cold start 起步 → 自采样/自补 CoT 喂回 → RL 精修，全程少碰老师的原始 token。</div>
+</section>
+
+<section class="blk" id="s21">
+  <h2><span class="idx">20</span>On-Policy 蒸馏（OPD）：卡在 SFT 和 RL 中间的第三条路</h2>
+  <div class="sub">让学生先按自己策略生成轨迹，教师在学生真实会到达的状态上给稠密反馈——纠正的正好是它自己真会犯错的地方。</div>
+  <div class="cols">
+    <div class="col"><div class="card"><h3>定位：模仿与 RL 的中间层</h3><ul><li>比 SFT 更贴近推理时真实分布（学自己的轨迹，不是老师的理想路径）</li><li>比 RL 的稀疏 outcome reward 给得更稠密（教师逐 token 反馈）</li></ul></div></div>
+    <div class="col"><div class="card"><h3>正好补上「硬蒸馏崩推理」</h3><ul><li>硬蒸馏：在教师理想路径上学 → 打崩原生推理</li><li>OPD：在学生自己轨迹上学 → 保住推理方式</li><li>即上节「保留推理」的正式范式</li></ul></div></div>
+  </div>
+  <div class="lead">工业拐点（Qwen3）：同样从 8B checkpoint 出发，OPD 在数学/代码上优于直接 RL，且 GPU 小时约只要 <b>1/10</b>。</div>
+</section>
+
+<section class="blk" id="s22">
+  <h2><span class="idx">21</span>OPD 全景时间线（2023 → 2026）：从奠基到系统化</h2>
+  <table style="font-size:13px;">
+    <thead><tr><th>阶段</th><th>关键进展</th><th>代表工作</th></tr></thead>
+    <tbody>
+      <tr><td class="k">2023 · 范式奠基</td><td>立起 on-policy 蒸馏范式</td><td>GKD、MiniLLM</td></tr>
+      <tr><td class="k">2024 · 目标函数细化</td><td>打磨 KL 选法（forward/reverse/skewed）怎么选才不发散</td><td>DistiLLM</td></tr>
+      <tr><td class="k">2025 · 工业化配方</td><td>Qwen3 第一次写成正式配方（8B、1/10 GPU 小时）</td><td>Qwen3 报告、AlignDistil</td></tr>
+      <tr><td class="k">2026H1 · 角色扩展</td><td>多教师整合 / 自蒸馏 / 多模态 / prefix-only 砍成本到几十分之一</td><td>MoPD、Video-OPD、OPCD</td></tr>
+      <tr><td class="k">2026H1 · 理论 + 系统</td><td>成败两条件；后缀监督衰减、可信 region、跨 tokenizer、异步容旧</td><td>Rethinking / Lightning OPD</td></tr>
+    </tbody>
+  </table>
+  <div class="lead">成败两条件（Rethinking OPD）：① 师生思维模式要兼容；② 教师必须真带来学生没见过的新能力。</div>
+</section>
+
+<section class="blk" id="s23">
+  <h2><span class="idx">22</span>OPD 最该记的几点 + 入门路线</h2>
+  <div class="cols">
+    <div class="col"><div class="card"><h3>六个要点速览</h3><ul style="font-size:14px;">
+      <li>1 定位：监督比 outcome reward 稠密、比 SFT 更近真实状态</li>
+      <li>2 工业拐点：8B 同起点，胜直接 RL、GPU 约 1/10</li>
+      <li>3 成败两条件：思维兼容 + 教师带来新能力</li>
+      <li>4 选择性监督：前 30% token 含近全部有效信号，只学前缀 FLOP 降到 1/2∼1/47</li>
+      <li>5 不必白盒：拿不到 teacher logits 也能蒸（GAD→ROPD→OmniOPD）</li>
+      <li>6 已扩自蒸馏/多模态：无更大教师也成，扩到 vision/video/agent</li></ul></div></div>
+    <div class="col"><div class="card"><h3>入门路线</h3><ul><li>GKD + MiniLLM 建直觉</li><li>Qwen3 看真实流水线里的位置</li><li>Rethinking + Lightning OPD：连「为什么有效」与「怎么降本」</li><li>两篇综述收口（分类框架 + 开放问题）</li></ul></div></div>
+  </div>
+  <div class="src">开放问题：学生偏离教师后，哪些后段监督仍有行动价值。来源：「On-Policy 蒸馏后训练全景综述」Vincent｜AIGC（小红书），含 38 篇 arxiv，本地存 OPD-综述/。</div>
+</section>
+
+<section class="blk" id="s24">
+  <h2><span class="idx">23</span>离线偏好优化（off-policy）：拿现成偏好数据，稳而省</h2>
+  <div class="sub">不在线采样，直接拿固定的 A &gt; B 偏好对优化——工程最简单、最稳，适合冷启动后快速对齐。</div>
+  <table style="font-size:13px;">
+    <thead><tr><th>方法</th><th>一句话</th><th>最重要参数 · 经验值</th><th>影响</th></tr></thead>
+    <tbody>
+      <tr><td class="k">DPO</td><td>用 A &gt; B 对直接优化，隐式 RM</td><td>β = 0.1（0.01∼0.5）；LR 5e-7∼1e-6</td><td>β 小 → 偏离参考远、易退化；大 → 几乎不学</td></tr>
+      <tr><td class="k">IPO</td><td>平方损失替 logsigmoid，修过拟合</td><td>正则 τ</td><td>缓解 DPO 对偏好对的过拟合</td></tr>
+      <tr><td class="k">KTO</td><td>用单条好/坏信号，无需成对</td><td>β</td><td>数据更易得（不必配对）</td></tr>
+      <tr><td class="k">ORPO</td><td>无参考模型，SFT + 赔率比一步到位</td><td>λ（偏好项权重）</td><td>省一个参考模型；λ 调偏好强度</td></tr>
+      <tr><td class="k">SimPO</td><td>无参考、长度归一奖励</td><td>β、γ（margin）</td><td>省参考模型；γ 控正负样本间隔</td></tr>
+    </tbody>
+  </table>
+  <div class="note">共性：省、稳、好部署；但只学得到数据里见过的，OOD 泛化弱、不会探索。</div>
+  <div class="src">来源：DPO arXiv:2305.18290 · IPO 2310.12036 · KTO 2402.01306 · ORPO 2403.07691 · SimPO 2405.14734</div>
+</section>
+
+<section class="blk" id="s25">
+  <h2><span class="idx">24</span>在线 RL（on-policy）：自己采样、自己迭代，泛化最强也最贵</h2>
+  <div class="sub">用 RM 当奖励，模型自己生成、自己评分、自己改——能探索出数据外的更优解，但贵且不稳。</div>
+  <table style="font-size:13px;">
+    <thead><tr><th>方法</th><th>一句话</th><th>最重要参数 · 经验值</th><th>影响</th></tr></thead>
+    <tbody>
+      <tr><td class="k">PPO</td><td>actor + critic，裁剪式更新</td><td>clip ϵ = 0.2；KL 系数；GAE λ = 0.95</td><td>ϵ 大 → 不稳；KL 小 → reward hacking，大 → 学不动</td></tr>
+      <tr><td class="k">GRPO</td><td>去掉 critic，组内相对优势</td><td>组大小 G = 8∼64；KL β；ϵ</td><td>G 大 → 优势估计稳但更贵；省一个价值网络</td></tr>
+      <tr><td class="k">RLOO</td><td>REINFORCE + 留一基线</td><td>样本数 k；学习率</td><td>简单省显存，适合中小规模</td></tr>
+      <tr><td class="k">REINFORCE++</td><td>REINFORCE + PPO 技巧（KL/归一/裁剪）</td><td>KL 系数；优势归一化</td><td>比 GRPO 更轻，稳定靠归一化</td></tr>
+    </tbody>
+  </table>
+  <div class="note">共性：探索强、泛化强；但在线采样贵、易不稳、会 reward hacking——<b>KL 是安全带</b>。</div>
+  <div class="src">来源：PPO arXiv:1707.06347 · GRPO（DeepSeekMath）2402.03300 · RLOO 2402.14740 · REINFORCE++（OpenRLHF, 2025）</div>
+</section>
+
+<section class="blk" id="s26">
+  <h2><span class="idx">25</span>GRPO：砍掉 critic，用「一组答案互相比」当基线——便宜、稳、为推理而生</h2>
+  <div class="sub">为什么这么火：省掉和策略一样大的价值网络，显存腰斩；可验证奖励 + GRPO = DeepSeek-R1 的推理配方。</div>
+  <div class="cols">
+    <div class="col"><div class="card"><h3><span class="num">1</span>原理</h3><p>同一道题采一组 G 个答案，用组内奖励均值当基线：</p><div class="formula">Âᵢ = (rᵢ − mean(r)) / std(r)</div><p>省掉 PPO 的 critic。</p></div></div>
+    <div class="col"><div class="card"><h3><span class="num">2</span>关键参数</h3><ul><li>组大小 G = 8∼64</li><li>KL 系数 β：安全带</li><li>clip ϵ、采样温度</li></ul></div></div>
+    <div class="col"><div class="card"><h3><span class="num">3</span>最佳实践</h3><ul><li>组内归一化奖励</li><li>奖励可验证（数学/代码）最香</li><li>G 大 → 稳但贵</li></ul></div></div>
+  </div>
+  <div class="lead">一句话：把「绝对打分」换成「组内相对名次」，省一个网络、天然稳，特别吃可验证奖励。</div>
+  <div class="src">来源：GRPO / DeepSeekMath arXiv:2402.03300 · DeepSeek-R1 arXiv:2501.12948</div>
+</section>
+
+<section class="blk" id="s27">
+  <h2><span class="idx">26</span>怎么选 + 三个最该拧的旋钮</h2>
+  <div class="sub">一条决策线：冷启动 → 离线对齐 → 在线精修；难点永远在离参考多远、探索多少、学多快。</div>
+  <div class="cols">
+    <div class="col"><div class="card"><h3>off-policy · 离线</h3><ul><li>数据固定，不在线采样</li><li>省、稳、易部署</li><li>短板：OOD 弱、不探索</li><li>用在：冷启动后快速对齐</li></ul></div></div>
+    <div class="col"><div class="card"><h3>on-policy · 在线</h3><ul><li>自采样，RM 当奖励</li><li>探索强、泛化强</li><li>短板：贵、不稳、会 hack</li><li>用在：要超越数据的精修</li></ul></div></div>
+  </div>
+  <div class="lead">三个旋钮：① KL/β（离参考多远）· ② 探索量（组大小/采样数）· ③ 学习率——<b>先动 KL，再动探索，最后调 LR</b>。</div>
+</section>
+
+<section class="blk" id="s28">
+  <h2><span class="idx">27</span>Agentic RL：把 RL 从「单轮回答」搬到「多步行动的轨迹」</h2>
+  <div class="sub">单轮 RL 优化这次答得好不好；Agentic RL 优化在能动手的环境里，一整条「观察 → 思考 → 调工具 → 再决策」的轨迹能不能把事做成。</div>
+  <div class="cols">
+    <div class="col"><div class="card"><h3>和单轮 RL 差在哪</h3><ul style="font-size:14px;"><li>优化对象：单条 response → 多轮 episode</li><li>奖励：即时偏好分 → 任务成败（稀疏、延迟）</li><li>难点：答得好不好 → 长程 credit assignment（哪一步导致成/败）</li><li>配套：cold start（先 SFT 学会工具格式）+ GRPO/PPO</li></ul></div></div>
+    <div class="col"><div class="card"><h3>奖励从哪来（两类）</h3><ul style="font-size:14px;"><li>可验证奖励 RLVR：code/math/检索有客观对错，环境直接判</li><li>Rubric / PRM 过程分：医疗问诊等无唯一答案，给中间步打分</li><li>即本文「打过程分」在 agent 场景的形态</li></ul></div></div>
+  </div>
+  <div class="flow">
+    <div class="node">观察</div><div class="arr">→</div><div class="node">思考</div><div class="arr">→</div><div class="node">调工具</div><div class="arr">→</div><div class="node">环境反馈</div><div class="arr">→</div><div class="node">任务结果</div></div>
+  <div class="lead">RLHF 教模型怎么说；Agentic RL 教它在环境里一步步把事做成——search / coding / 医疗 agent 这条线要训的就是它。</div>
+</section>
+
+<section class="blk" id="s29">
+  <h2><span class="idx">28</span>训练之外的轻杠杆（一）· PE 优化：不动权重，最快换行为</h2>
+  <div class="sub">同一个模型，只改提示词就能换行为——零训练、分钟级上线、随时回滚。</div>
+  <div class="cols">
+    <div class="col"><div class="card"><h3><span class="num">1</span>改什么</h3><ul><li>System prompt：把 Rubric 维度写成硬指令</li><li>Few-shot：喂 badcase 的正确做法</li><li>输出格式：先结论后依据</li></ul></div></div>
+    <div class="col"><div class="card"><h3><span class="num">2</span>例子</h3><ul><li>电商：先判软广，刷单评价不作推荐依据。</li><li>医疗（Medprompt）：动态 few-shot + 自生成 CoT + 选项乱序集成，把通用模型在 MedQA 推过 90%。</li></ul></div></div>
+    <div class="col"><div class="card"><h3><span class="num">3</span>边界 / 坑</h3><ul><li>prompt 越长越贵、越不稳</li><li>知识没沉进权重，模型没真变强</li><li>易过拟合，要与 RM 对齐</li></ul></div></div>
+  </div>
+  <div class="lead">PE 是最快验证"尺子怎么打"的手段：先用 prompt 试方向，再决定要不要训进模型。</div>
+</section>
+
+<section class="blk" id="s30">
+  <h2><span class="idx">29</span>PE 激发出来的能力怎么收口：优先 RL/OPD，别默认 SFT</h2>
+  <div class="sub">PE 能稳定激发 = 能力基模里本来就有（latent）。那是"让触发更可靠"的问题，不是"装能力"——用 SFT 烙印就容易训死。</div>
+  <div class="cols">
+    <div class="col"><div class="card"><h3><span class="num">1</span>先问：要进权重吗</h3><p>是流程/格式/工具 → 打成 Skill / 工具，别训。行为活在权重外，零训死、可热插拔。</p></div></div>
+    <div class="col"><div class="card"><h3><span class="num">2</span>放大已有能力：激发类</h3><ul><li>RL（GRPO/PPO+rubric）：优化奖励不克隆 token，保泛化</li><li>OPD：学自己轨迹，不灌外来 token</li><li>自蒸馏：留对的喂回，全程自分布</li></ul></div></div>
+    <div class="col"><div class="card"><h3><span class="num">3</span>真要 SFT：别训死</h3><ul><li>只当 cold start，随后 RL/OPD 捞回泛化</li><li>LoRA：冻主干、不覆盖</li><li>混 replay 数据、LR 低、轮数 1–2</li></ul></div></div>
+  </div>
+  <div class="lead">收口：PE 试出来了 → 走激发（RL/OPD/小开关），不走烙印（SFT）；SFT 只留给基模确实不会、RL 又一直做不对的硬骨头。</div>
+</section>
+
+<section class="blk" id="s31">
+  <h2><span class="idx">30</span>训练之外的轻杠杆（二）· Skill 优化：把专家流程打成能力包</h2>
+  <div class="sub">比 PE 更进一步：把"某类任务该怎么一步步做"打包成可复用、可版本管理、按需加载的模块。</div>
+  <div class="cols">
+    <div class="col"><div class="card"><h3>PE · 单条指令的临时改写</h3><ul><li>改一句 prompt，解一类小问题</li><li>难沉淀、难复用、难组合</li><li>复杂多步流程一塞就乱</li></ul></div></div>
+    <div class="col"><div class="card"><h3>Skill · 结构化的能力单元</h3><ul><li>SOP + 工具 + 模板打成一包</li><li>渐进式加载，用到才进上下文</li><li>是 Agent 在循环里随手就调的能力</li></ul></div></div>
+  </div>
+  <div class="lead">医疗（MedAgents / AMIE）：多专家会诊 / 多步问诊——分诊 → 鉴别诊断 → 管理推理；电商"导购选品 skill"：处境抽取 + 真实评价召回 + 适配打分 + 避坑清单。</div>
+</section>
+
+<section class="blk" id="s32">
+  <h2><span class="idx">31</span>Harness 升级（一）· 从「写死的 workflow」到「模型自主调 skill」</h2>
+  <div class="sub">Harness = 智能体的运行骨架。升级的本质：把流程控制权从开发者写死的编排交回给模型自己决策。</div>
+  <div class="cols">
+    <div class="col"><div class="card"><h3>旧 · Workflow 编排</h3><ul><li>把任务拆成固定有向图：A→B→C 写死</li><li>每一步调哪个工具、什么顺序，代码里钉死</li><li>模型只在格子里填空，不决定走向</li><li>加一种情况 = 改图、加分支、回归测试</li></ul></div></div>
+    <div class="col"><div class="card"><h3>新 · Skill 化 Harness</h3><ul><li>能力打成一个个 skill 包（SOP+工具+模板）</li><li>Harness 只给一圈 think–act–observe 循环</li><li>模型自己判断该调哪个 skill、调几次、何时停</li><li>加能力 = 丢一个新 skill 进去，不动主干</li></ul></div></div>
+  </div>
+  <div class="lead">一句话：workflow 是「编导演」，skill 化 harness 是「给演员剧本库，让他自己演」。</div>
+</section>
+
+<section class="blk" id="s33">
+  <h2><span class="idx">32</span>Harness 升级（二）· 优劣势权衡，与升级到底换来什么</h2>
+  <div class="sub">不是 workflow 一无是处——它可控、可预测；但业务一复杂，写死的编排就脆、不泛化、组合爆炸。</div>
+  <div class="cols">
+    <div class="col"><div class="card"><h3>Workflow · 优劣</h3><ul><li>+ 路径确定、好调试、好兜底</li><li>+ 弱基模也能跑，行为可审计</li><li>− 每个新场景都要重写一条线</li><li>− 分支越加越乱，改一处动全身</li><li>− 撞上没写到的情况直接抓瞎</li></ul></div></div>
+    <div class="col"><div class="card"><h3>Skill 化 Harness · 优劣</h3><ul><li>+ 能力可组合，新场景靠已有 skill 拼</li><li>+ 随基模变强自然涨，不重写主干</li><li>+ 渐进加载，省上下文</li><li>− 吃基模能力，弱模型乱调、调飞</li><li>− 路径不定，调试 / 兜底更难</li></ul></div></div>
+  </div>
+  <div class="note">升级换来的：① 加能力 = 加 skill，边际成本趋零；② 主干稳定、能力解耦；③ 把决策权交给越来越强的模型，吃到基模红利。</div>
+  <div class="src">落地节奏：高风险 / 强合规环节仍保留 workflow 护栏，低风险、需泛化的环节优先 skill 化——两者混用，不是非此即彼。</div>
+</section>
+
+<section class="blk" id="s34">
+  <h2><span class="idx">33</span>训练之外的轻杠杆（三）· 知识层：给 Agent 一个「活的 wiki」</h2>
+  <div class="sub">不训练、不改 prompt——把知识沉成 markdown 文件库，让 Agent 自己读、自己改、自己连。</div>
+  <div class="cols">
+    <div class="col"><div class="card"><h3>RAG · 查询时现拼</h3><ul><li>每次从原始文档切片召回</li><li>反复读同样的事实</li><li>无沉淀、易出错、费 token</li></ul></div></div>
+    <div class="col"><div class="card"><h3>LLM Wiki · 预先合成</h3><ul><li>概念 = 1 个 md 文件，互相链接成图</li><li>Agent 读 / 改 / 连成「活的记忆」</li><li>合成提前做，省 token、更准</li></ul></div></div>
+  </div>
+  <div class="note">Google 把它标准化为 <b>OKF</b>（Open Knowledge Format，2026-06）：md 目录 + YAML frontmatter（唯一必填 type，余 title/description/resource/tags/timestamp）+ index.md / log.md。</div>
+  <div class="src">同源思路：Karpathy「LLM Wiki」gist · Obsidian vault · AGENTS.md / CLAUDE.md 约定文件。来源：Google Cloud, Introducing the Open Knowledge Format, 2026-06-13。</div>
+</section>
+
+<section class="blk" id="s35">
+  <h2><span class="idx">34</span>训练之外的轻杠杆（四）· 记忆系统优化：让 Agent 自己沉淀最佳 Tool 与 Skill</h2>
+  <div class="sub">知识层是"把事实写进去"；记忆系统再进一步——把"哪个工具好用、哪条 skill 真解决了问题"也记下来，让能力越用越强。</div>
+  <div class="cols">
+    <div class="col"><div class="card"><h3>静态知识层 · 记「事实」</h3><ul><li>写入的是概念 / 事实，人或 agent 主动记</li><li>不告诉你此刻该调哪个工具、走哪条路</li><li>Tool / Skill 库靠人工写死，加一个改一次</li></ul></div></div>
+    <div class="col"><div class="card"><h3>自演化记忆 · 记「过程」</h3><ul><li>还记过程性经验：成功轨迹、好用的 tool-call</li><li>从经验里蒸馏出可复用单元，自动进库</li><li>高频复用的 promote 成 Skill，冗余 / 失败的 merge 或 prune</li></ul></div></div>
+  </div>
+  <div class="flow">
+    <div class="node">运行任务</div><div class="arr">→</div><div class="node">观察成败<br>可验证 / 过程分</div><div class="arr">→</div><div class="node">蒸馏<br>Tool · Skill</div><div class="arr">→</div><div class="node">写入记忆</div><div class="arr">→</div><div class="node">检索复用</div></div>
+  <div class="src">同源：A-MEM（NeurIPS'25，记忆网络随经验自演化）· Voyager（从成功轨迹自动积累技能库）· Mem0 · 与上节知识层 / OKF 一脉：沉淀，而非重训。</div>
+</section>
+
+<section class="blk" id="s36">
+  <h2><span class="idx">35</span>训练之外的轻杠杆（五）· 代码化：能写测试的，就别写进 prompt</h2>
+  <div class="sub">PE / Skill / 知识层都在"不动权重"地塞行为——但塞进去的很多东西，其实是被错放成自然语言的代码。</div>
+  <table style="font-size:13px;">
+    <thead><tr><th>prompt / skill 里的内容</th><th>判据（怎么认）</th><th>该沉到哪</th></tr></thead>
+    <tbody>
+      <tr><td class="k">流程 / 规则 / 阈值 / 格式 / 调度</td><td>有明确答案、确定性、判对错不需语言</td><td>代码 / 工具 / 校验器</td></tr>
+      <tr><td class="k">领域知识 / 事实 / few-shot 示例</td><td>是数据不是逻辑</td><td>知识层（md / OKF）</td></tr>
+      <tr><td class="k">意图理解 / 生成 / 语气 / 模糊判断 / 兜底</td><td>判对错需要语言与语境</td><td>留给模型——这是护城河</td></tr>
+      <tr><td class="k">软措辞「建议 / 可考虑 / 个体化」</td><td>像规则、实则模糊</td><td>慎判：硬代码化会静默出错</td></tr>
+    </tbody>
+  </table>
+  <div class="note">别拍脑袋报比例——逐块判定、测出真实数：<b>能写测试的，就不该写进 prompt</b>。</div>
+  <div class="src">推论：可代码化的越多 = 模型不可替代的越窄，但越关键；把算力烧在那条窄缝上，而不是背规则。</div>
+</section>
+
+<section class="blk" id="s37">
+  <h2><span class="idx">36</span>这些杠杆在论文里长什么样：五个真实的医疗范例</h2>
+  <div class="sub">上面这套方法不是空谈——医疗大模型的公开工作里都能找到对应。</div>
+  <table style="font-size:13px;">
+    <thead><tr><th>优化杠杆</th><th>真实系统 / 论文</th><th>做了什么（一句话）</th></tr></thead>
+    <tbody>
+      <tr><td class="k">PE 提示工程</td><td>Medprompt（MS, 2023）</td><td>动态 few-shot + 自生成 CoT + 选项乱序集成 → MedQA &gt;90%</td></tr>
+      <tr><td class="k">Skill / Agent</td><td>AMIE · MedAgents</td><td>多步问诊 / 多专家会诊：分诊 → 鉴别诊断 → 管理推理</td></tr>
+      <tr><td class="k">训练样本</td><td>Med-PaLM · MultiMedQA</td><td>聚合 MedQA / MedMCQA / PubMedQA + 新建 HealthSearchQA</td></tr>
+      <tr><td class="k">Reward 偏好</td><td>Med-PaLM 2</td><td>医生成对偏好排序（9 个临床维度）→ MedQA 86.5%</td></tr>
+      <tr><td class="k">Rubric Reward</td><td>HealthBench（OpenAI, 2025）</td><td>262 名医生写 48,562 条 rubric，模型 grader 逐条判分、归一 [0,1]</td></tr>
+    </tbody>
+  </table>
+  <div class="src">来源：Medprompt arXiv:2311.16452 · AMIE arXiv:2401.05654 · MedAgents arXiv:2311.10537（ACL'24 Findings）· Med-PaLM Nature'23 / arXiv:2212.13138 · Med-PaLM 2 arXiv:2305.09617 · HealthBench arXiv:2505.08775</div>
+</section>
+
+<section class="blk" id="s38">
+  <h2><span class="idx">37</span>Reward Hacking：模型会"骗尺子"，所以要对抗样本</h2>
+  <div class="sub">长时间没法把 RM 调到理想态——它很容易被 hack。</div>
+  <table>
+    <thead><tr><th>Hacking 姿势</th><th>表现</th></tr></thead>
+    <tbody>
+      <tr><td class="k">答案堆长</td><td>用长度冒充丰富度</td></tr>
+      <tr><td class="k">堆结构</td><td>大量标题，信息密度其实很低</td></tr>
+      <tr><td class="k">堆引用</td><td>引用 / 截图不直接支撑结论（软广常用）</td></tr>
+      <tr><td class="k">过度免责声明</td><td>安全但难用</td></tr>
+      <tr><td class="k">空泛正确的废话</td><td>"因人而异、适合自己最重要"——正确但没用</td></tr>
+    </tbody>
+  </table>
+  <div class="lead">解药：<b>对抗样本 + 独立 GroundTruth + 线上 AB</b>，三道关一起兜。</div>
+</section>
+
+<section class="blk" id="s39">
+  <h2><span class="idx">38</span>后验校准：用户用脚投票，但同一个动作有两义</h2>
+  <div class="cols">
+    <div class="col"><div class="card"><h3>别只看后验：动机可能相反</h3><ul><li>长停留：戳中认真读 / 太乱在反复翻找</li><li>快划走：一眼解决 / 全是广告才划走</li><li>追问：被启发 / 答非所问再问一遍</li><li>点赞：真心认可 / 点赞抽奖</li></ul></div></div>
+    <div class="col"><div class="card"><h3>优势多目标：三者对齐</h3><p>人标 / Rubric 定方向 → 线上行为验证 → 先验 (RM) 与后验 (行为) 同时改善。</p><p><b>危险信号：</b>RM 离线一直涨、线上 AB 不涨——学到的是评测偏好，不是用户偏好。</p></div></div>
+  </div>
+  <div class="lead">线上 AB 必须拆到<b>细分人群 / 品类</b>才看得清，别掉进"全局指标"陷阱。</div>
+</section>
+
+<section class="blk" id="s40">
+  <h2><span class="idx">39</span>GroundTruth 评测集：尺子到底对不对的最后兜底</h2>
+  <div class="cols">
+    <div class="col"><div class="card"><h3>它要包含什么</h3><ul><li>用户真实场景 / 真实 query 分布</li><li>高质量人工数据</li><li>对抗样本（Code 样本）</li><li>足够多样性（用户视角天然偏头部）</li></ul></div></div>
+    <div class="col"><div class="card"><h3>两个误区</h3><ul><li>别拿评测集直接蒸馏 RM：会过拟合、对齐内部标准</li><li>别只看全局指标</li><li><b>正解：</b>用评测集的度量方案去生成 RM，但不用评测集本身。</li></ul></div></div>
+  </div>
+  <div class="lead">数据分工：机器合成训练 → 人工抽检调参 → 人工高质量评测 → Online AB 最终校准。</div>
+</section>
+
+<section class="blk" id="s41">
+  <h2><span class="idx">40</span>刷榜：分数想刷多高都行——区别在「拟合榜单」还是「把榜当能力基建」</h2>
+  <div class="sub">以现在的技术，单个榜理论上想刷多高都能刷到，各家只是相对克制；要同时刷很多榜，难度才陡增。</div>
+  <div class="cols">
+    <div class="col"><div class="card"><h3>纯刷：直接拟合榜单</h3><ul><li>拿榜直接拟合 / 套测试分布冲分</li><li>不高级、不道德、用处也不大</li><li>分数离开这个榜就不迁移</li></ul></div></div>
+    <div class="col"><div class="card"><h3>正解：把榜当能力基建</h3><ul><li>把榜单背后的能力当成重要基础建设</li><li>用真训练能力的方式做：SFT / RL（同前几节）</li><li>分数提上去 = 内化成模型真本事</li></ul></div></div>
+  </div>
+  <div class="lead">同一个分数，两种来历：拟合出来的一离开榜就废，训出来的走到哪都带得走。</div>
+</section>
+
+<section class="blk" id="s42">
+  <h2><span class="idx">41</span>正向：从零定义一个场景的六步（以电商导购搜为例）</h2>
+  <div class="cols">
+    <div class="col">
+      <div class="card" style="margin-bottom:12px;"><p><b>1 场景预期：</b>抓处境标签（肤质 / 机型 / 预算 / 尺码 / 使用场景）</p></div>
+      <div class="card" style="margin-bottom:12px;"><p><b>2 度量定义：</b>复用通用维度 + 写场景 Rubric（刷单识别 / 适配档位）</p></div>
+      <div class="card"><p><b>3 评测集：</b>贴合真实分布 + 高质量、能识破 reward hacking</p></div>
+    </div>
+    <div class="col">
+      <div class="card" style="margin-bottom:12px;"><p><b>4 训练过程：</b>随机 session + badcase 专项 + 线上反馈，合成扩样本</p></div>
+      <div class="card" style="margin-bottom:12px;"><p><b>5 训练 RM：</b>pairwise（真实评价 vs 刷单软文）+ rubric 打分</p></div>
+      <div class="card"><p><b>6 在线校准：</b>RM 预测对 AB 了吗？补 hard example、修 Rubric</p></div>
+    </div>
+  </div>
+  <div class="note">换到医疗问诊搜：处境 = 年龄 / 基础病 / 用药史；Rubric = 红旗 / 剂量 / 就医提示；评测集要含高风险对抗样本；RM 偏好"该 abstain 就 abstain"。</div>
+  <div class="lead">核心：脑中先有"最优答案"，一步步推演——只做一步看一步，做不出超预期。</div>
+</section>
+
+<section class="blk" id="s43">
+  <h2><span class="idx">42</span>反向：一个 badcase 驱动的全链路闭环</h2>
+  <div class="sub">同一个 Code，根因可能在不同节点——要沿链路逐个排查。</div>
+  <div class="flow">
+    <div class="node">后验异常<br>退货↑/加购↓/重搜↑</div><div class="arr">→</div>
+    <div class="node">映射受损维度<br>真实性 + 适配匹配</div><div class="arr">→</div>
+    <div class="node">定位节点<br>召回/生成/prompt/RM</div><div class="arr">→</div>
+    <div class="node">针对节点改<br>过滤/hard example/加维度</div>
+  </div>
+  <div class="note" style="text-align:center;">复测：举报降了吗？RM 和用户一致了吗？</div>
+  <div class="lead">改完一定要回到<b>后验复测</b>——对上了，才算真修好。</div>
+</section>
+
+<section class="blk" id="s44">
+  <h2><span class="idx">43</span>总结：关键手段，与新人最容易踩的红线</h2>
+  <div class="cols">
+    <div class="col"><div class="card"><h3>四类关键优化手段</h3><ul><li>维度评估标准准不准（尺子刻歪）</li><li>维度在 RM 里的权重</li><li>Tool / 召回的原材料质量</li><li>训练集——构造 hard example</li></ul></div></div>
+    <div class="col"><div class="card"><h3>新人六条红线</h3><ul><li>先有度量定义，才有优化逻辑</li><li>别用线性加权 merge</li><li>别让合成数据自产自销</li><li>别用评测集蒸馏 RM</li><li>别只看全局指标</li><li>警惕离线涨、线上不涨</li></ul></div></div>
+  </div>
+  <div class="lead">定义好尺子 → 教给模型 → 让用户验收 → 顺着 badcase 修每一节。<b>LLM is all you need！</b></div>
+</section>
+
+</main>
+
+<footer class="foot">
+  <div class="big">谢谢</div>
+  <div>如何优化 AI 产品——从「度量」到全链路优化</div>
+  <div>分享人 <b>Leo</b> · 京东健康 AI 负责人 & 医疗健康大模型负责人</div>
+  <div style="margin-top:6px;color:#9aa4b2;font-size:14px;">前菜鸟 AI 负责人 · 蚂蚁金服金融 AI 负责人 & 金融大模型负责人 · SIGKDD 高级领域主席</div>
+  <div style="margin-top:14px;color:#9aa4b2;">尺子做对了，优化才有方向 · Leo · 京东健康</div>
+</footer>
+
+</body>
+</html>
