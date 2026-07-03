@@ -325,7 +325,7 @@
     <thead><tr><th>方式</th><th>怎么训</th><th>优点</th><th>缺点 / 坑</th></tr></thead>
     <tbody>
       <tr><td class="k">SFT 监督微调</td><td>模仿高质量答案（标准答案）</td><td>简单稳、快定基线行为</td><td>偏记忆、泛化弱于 RL；天花板 = 标注，不会自我超越</td></tr>
-      <tr><td class="k">MOPD 蒸馏</td><td>用更强教师 / Best-of-N 选优的输出当目标，蒸给学生</td><td>稳、便宜；把大模型 / 采样能力平移到线上小模型</td><td>天花板 = 教师；学不到教师之外；继承教师偏差</td></tr>
+      <tr><td class="k">OPD 蒸馏</td><td>用更强教师 / Best-of-N 选优的输出当目标，蒸给学生</td><td>稳、便宜；把大模型 / 采样能力平移到线上小模型</td><td>天花板 = 教师；学不到教师之外；继承教师偏差</td></tr>
       <tr><td class="k">DPO 直接偏好优化</td><td>拿 pairwise（A &gt; B）直接优化，不显式训 RM、不在线采样</td><td>工程简单、稳、省一个 RM</td><td>纯离线、OOD 泛化弱；难做硬约束 / 多目标</td></tr>
       <tr><td class="k">RL (RLHF/PPO/GRPO)</td><td>用 RM 当 reward，在线采样迭代策略</td><td>探索、泛化强；对齐尺子、适配多目标</td><td>贵、不稳；RM 抓到伪特征 → 过优化 / reward hacking</td></tr>
     </tbody>
@@ -390,8 +390,8 @@
       <tr><td class="k">2023 · 范式奠基</td><td>立起 on-policy 蒸馏范式</td><td>GKD、MiniLLM</td></tr>
       <tr><td class="k">2024 · 目标函数细化</td><td>打磨 KL 选法（forward/reverse/skewed）怎么选才不发散</td><td>DistiLLM</td></tr>
       <tr><td class="k">2025 · 工业化配方</td><td>Qwen3 第一次写成正式配方（8B、1/10 GPU 小时）</td><td>Qwen3 报告、AlignDistil</td></tr>
-      <tr><td class="k">2026H1 · 角色扩展</td><td>多教师整合 / 自蒸馏 / 多模态 / prefix-only 砍成本到几十分之一</td><td>MoPD、Video-OPD、OPCD</td></tr>
-      <tr><td class="k">2026H1 · 理论 + 系统</td><td>成败两条件；后缀监督衰减、可信 region、跨 tokenizer、异步容旧</td><td>Rethinking / Lightning OPD</td></tr>
+      <tr><td class="k">2026H1 · 角色扩展</td><td>多教师整合 / 自蒸馏 / 多模态 / prefix-only 砍成本到几十分之一</td><td>多教师 · 多模态 · 前缀蒸馏方向</td></tr>
+      <tr><td class="k">2026H1 · 理论 + 系统</td><td>成败两条件；后缀监督衰减、可信 region、跨 tokenizer、异步容旧</td><td>理论分析 + 系统降本</td></tr>
     </tbody>
   </table>
   <div class="lead">成败两条件（Rethinking OPD）：① 师生思维模式要兼容；② 教师必须真带来学生没见过的新能力。</div>
@@ -405,9 +405,9 @@
       <li>2 工业拐点：8B 同起点，胜直接 RL、GPU 约 1/10</li>
       <li>3 成败两条件：思维兼容 + 教师带来新能力</li>
       <li>4 选择性监督：前 30% token 含近全部有效信号，只学前缀 FLOP 降到 1/2∼1/47</li>
-      <li>5 不必白盒：拿不到 teacher logits 也能蒸（GAD→ROPD→OmniOPD）</li>
+      <li>5 不必白盒：拿不到 teacher logits 也能蒸（黑盒 / 无 logits 的 OPD 路线）</li>
       <li>6 已扩自蒸馏/多模态：无更大教师也成，扩到 vision/video/agent</li></ul></div></div>
-    <div class="col"><div class="card"><h3>入门路线</h3><ul><li>GKD + MiniLLM 建直觉</li><li>Qwen3 看真实流水线里的位置</li><li>Rethinking + Lightning OPD：连「为什么有效」与「怎么降本」</li><li>两篇综述收口（分类框架 + 开放问题）</li></ul></div></div>
+    <div class="col"><div class="card"><h3>入门路线</h3><ul><li>GKD + MiniLLM 建直觉</li><li>Qwen3 看真实流水线里的位置</li><li>近期理论 + 系统工作：连「为什么有效」与「怎么降本」</li><li>两篇综述收口（分类框架 + 开放问题）</li></ul></div></div>
   </div>
   <div class="src">开放问题：学生偏离教师后，哪些后段监督仍有行动价值。来源：「On-Policy 蒸馏后训练全景综述」Vincent｜AIGC（小红书），含 38 篇 arxiv，本地存 OPD-综述/。</div>
 </section>
