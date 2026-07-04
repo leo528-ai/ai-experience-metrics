@@ -77,7 +77,7 @@
 <header class="hero"><div class="wrap">
   <div class="kicker">AI 产品优化 · 方法论分享</div>
   <h1>如何优化 AI 产品</h1>
-  <div class="tagline">从「度量」到全链路优化：<b>先把尺子做对，再谈优化</b></div>
+  <div class="tagline">从「度量」到全链路优化：<b>Measurement-driven —— 先把这把「游标卡尺」校准，再谈优化</b></div>
   <div class="meta">度量驱动的方法论为主线　·　例子贯穿 电商 / 医疗 / 通用搜</div>
   <div class="who"><b>Leo</b>　京东健康 AI 负责人 & 医疗健康大模型负责人</div>
   <div class="bio">前菜鸟 AI 负责人　·　蚂蚁金服金融 AI 负责人 & 金融大模型负责人　·　SIGKDD 高级领域主席</div>
@@ -92,13 +92,13 @@
     <li><a href="#s5">关键词全景：服务链路 × 优化链路</a></li>
     <li><a href="#s6">两种链路形态</a></li>
     <li><a href="#s7">通用五维度</a></li>
-    <li><a href="#s8">场景化：预期决定尺子</a></li>
+    <li><a href="#s8">场景化：预期决定卡尺</a></li>
     <li><a href="#s9">怎么刻画一个维度：四种方法</a></li>
     <li><a href="#s10">Rubric 是什么</a></li>
     <li><a href="#s11">GSB 是没办法的办法</a></li>
     <li><a href="#s12">多维 merge：别用加权平均</a></li>
     <li><a href="#s13">Failure Code</a></li>
-    <li><a href="#s14">召回 / Search</a></li>
+    <li><a href="#s14">Agentic Search</a></li>
     <li><a href="#s15">LLM 生成</a></li>
     <li><a href="#s16">RM 训练数据</a></li>
     <li><a href="#s17">SFT → 蒸馏 → DPO → RL</a></li>
@@ -137,7 +137,7 @@
 <section class="blk" id="s2">
   <h2><span class="idx">01</span>一句话主张</h2>
   <div class="big-quote">
-    模型怎么调、链路怎么改，方法千千万，但重要的是先把「<b>尺子</b>」做对。<br>
+    模型怎么调、链路怎么改，方法千千万，但重要的是先把「<b>评测基准（benchmark）</b>」这把游标卡尺校准。<br>
     用户效用度量，是地图也是方向盘——<b>度量错了，优化越使劲，跑得越偏。</b>
   </div>
 </section>
@@ -154,13 +154,13 @@
 
 <section class="blk" id="s4">
   <h2><span class="idx">03</span>于是"优化 AI 产品"拆成三个核心问题</h2>
-  <div class="lead" style="margin-top:0;margin-bottom:14px;">RM 是我们对"用户那把尺子"的近似，它就是模型做 RL 时的优化导向。</div>
+  <div class="lead" style="margin-top:0;margin-bottom:14px;">RM 是我们对"用户那把卡尺"的近似，它就是模型做 RL 时的优化导向。</div>
   <div class="cols">
-    <div class="col"><div class="card"><h3><span class="num">1</span>尺子怎么刻</h3><p>人类对内容的效用 / 质量如何度量？维度、档位、怎么合成一个分。</p></div></div>
-    <div class="col"><div class="card"><h3><span class="num">2</span>怎么教给模型</h3><p>模型如何拟合这把尺子（RM）？让计算机能替我们打出这个分。</p></div></div>
-    <div class="col"><div class="card"><h3><span class="num">3</span>尺子对不对</h3><p>线上真实用户认不认？后验行为与 AB 回头校准这把尺子。</p></div></div>
+    <div class="col"><div class="card"><h3><span class="num">1</span>卡尺怎么刻</h3><p>人类对内容的效用 / 质量如何度量？维度、档位、怎么合成一个分。</p></div></div>
+    <div class="col"><div class="card"><h3><span class="num">2</span>怎么教给模型</h3><p>模型如何拟合这把卡尺（RM）？让计算机能替我们打出这个分。</p></div></div>
+    <div class="col"><div class="card"><h3><span class="num">3</span>卡尺对不对</h3><p>线上真实用户认不认？后验行为与 AB 回头校准这把卡尺。</p></div></div>
   </div>
-  <div class="note">全篇就围绕这三件事：<b>刻尺子 → 教模型 → 用户验收</b>。</div>
+  <div class="note">全篇就围绕这三件事：<b>刻卡尺 → 教模型 → 用户验收</b>。</div>
 </section>
 
 <section class="blk" id="s5">
@@ -168,7 +168,7 @@
   <div class="sub">一条 query 从左到右流过的每个在线节点，背后都对应一组离线手段。</div>
   <div class="flow">
     <div class="node">提问</div><div class="arr">→</div>
-    <div class="node">召回 / Search</div><div class="arr">→</div>
+    <div class="node">Agentic Search</div><div class="arr">→</div>
     <div class="node">LLM 生成</div><div class="arr">→</div>
     <div class="node">答案呈现</div><div class="arr">→</div>
     <div class="node">后验行为</div>
@@ -187,7 +187,7 @@
   <h2><span class="idx">05</span>两种链路形态：从「检索式」到「Agentic 循环式」</h2>
   <div class="sub">同一个问题，链路从一次召回、线性走完，进化到多轮调工具、自己判断够没够。</div>
   <div class="card" style="margin-bottom:12px;"><h3>经典检索式</h3>
-    <div class="flow" style="margin:6px 0 0;"><div class="node">提问</div><div class="arr">→</div><div class="node">召回 / 检索</div><div class="arr">→</div><div class="node">LLM 生成</div><div class="arr">→</div><div class="node">答案呈现</div></div></div>
+    <div class="flow" style="margin:6px 0 0;"><div class="node">提问</div><div class="arr">→</div><div class="node">Agentic Search</div><div class="arr">→</div><div class="node">LLM 生成</div><div class="arr">→</div><div class="node">答案呈现</div></div></div>
   <div class="card"><h3>Agentic 循环式</h3>
     <div class="flow" style="margin:6px 0 0;"><div class="node">意图理解 + 规划</div><div class="arr">→</div><div class="node">工具调用<br>搜/读/执行/调 API</div><div class="arr">→</div><div class="node">观察结果</div><div class="arr">→</div><div class="node">反思<br>够了？对了？</div><div class="arr">→</div><div class="node">验证 → 产出<br><small>否 · 再来一轮</small></div></div></div>
   <div class="lead">Reward Model 也随之升级：从只给最终答案打分（<b>结果奖励</b>），到每一轮都判断该不该继续（<b>过程奖励</b>）。</div>
@@ -210,7 +210,7 @@
 </section>
 
 <section class="blk" id="s8">
-  <h2><span class="idx">07</span>效果度量（二）· 场景化：用户预期决定尺子怎么刻</h2>
+  <h2><span class="idx">07</span>效果度量（二）· 场景化：用户预期决定卡尺怎么刻</h2>
   <div class="sub">同一个答案，换个场景好坏完全不同——因为用户的预期不一样。</div>
   <table style="font-size:13px;">
     <thead><tr><th></th><th>电商导购搜</th><th>医疗问诊搜</th><th>通用知识搜</th><th>内容种草搜</th></tr></thead>
@@ -286,7 +286,7 @@
 </section>
 
 <section class="blk" id="s14">
-  <h2><span class="idx">13</span>召回 / Search：答案的"原材料"，是效果的天花板</h2>
+  <h2><span class="idx">13</span>Agentic Search：答案的"原材料"，是效果的天花板</h2>
   <div class="sub">典型 garbage in, garbage out——召回上来的就不对，后面再强也救不回。</div>
   <div class="cols">
     <div class="col"><div class="card"><h3>失败模式</h3><ul><li>电商：召回刷单软广、人群不匹配、过期促销</li><li>医疗：召回过期指南、非权威网帖、个例当通则</li><li>只召一边倒好评，漏掉避坑帖 / 禁忌</li></ul></div></div>
@@ -319,7 +319,7 @@
 </section>
 
 <section class="blk" id="s17">
-  <h2><span class="idx">16</span>怎么把模型推向这把尺子：SFT → 蒸馏 → DPO → RL</h2>
+  <h2><span class="idx">16</span>怎么把模型推向这把卡尺：SFT → 蒸馏 → DPO → RL</h2>
   <div class="sub">一条主线：从模仿标准答案，到模仿强教师，到对齐"为什么 A 比 B 好"，再到自己探索更优。</div>
   <table style="font-size:13px;">
     <thead><tr><th>方式</th><th>怎么训</th><th>优点</th><th>缺点 / 坑</th></tr></thead>
@@ -327,7 +327,7 @@
       <tr><td class="k">SFT 监督微调</td><td>模仿高质量答案（标准答案）</td><td>简单稳、快定基线行为</td><td>偏记忆、泛化弱于 RL；天花板 = 标注，不会自我超越</td></tr>
       <tr><td class="k">OPD 蒸馏</td><td>用更强教师 / Best-of-N 选优的输出当目标，蒸给学生</td><td>稳、便宜；把大模型 / 采样能力平移到线上小模型</td><td>天花板 = 教师；学不到教师之外；继承教师偏差</td></tr>
       <tr><td class="k">DPO 直接偏好优化</td><td>拿 pairwise（A &gt; B）直接优化，不显式训 RM、不在线采样</td><td>工程简单、稳、省一个 RM</td><td>纯离线、OOD 泛化弱；难做硬约束 / 多目标</td></tr>
-      <tr><td class="k">RL (RLHF/PPO/GRPO)</td><td>用 RM 当 reward，在线采样迭代策略</td><td>探索、泛化强；对齐尺子、适配多目标</td><td>贵、不稳；RM 抓到伪特征 → 过优化 / reward hacking</td></tr>
+      <tr><td class="k">RL (RLHF/PPO/GRPO)</td><td>用 RM 当 reward，在线采样迭代策略</td><td>探索、泛化强；对齐卡尺、适配多目标</td><td>贵、不稳；RM 抓到伪特征 → 过优化 / reward hacking</td></tr>
     </tbody>
   </table>
   <div class="note">训练还有什么：RLAIF（AI 反馈替代人标）· 过程奖励 PRM（给推理每一步打分）· KTO / ORPO（偏好优化变体）· 课程学习 / hard example 重采样。</div>
@@ -487,7 +487,7 @@
     <div class="col"><div class="card"><h3><span class="num">2</span>例子</h3><ul><li>电商：先判软广，刷单评价不作推荐依据。</li><li>医疗（Medprompt）：动态 few-shot + 自生成 CoT + 选项乱序集成，把通用模型在 MedQA 推过 90%。</li></ul></div></div>
     <div class="col"><div class="card"><h3><span class="num">3</span>边界 / 坑</h3><ul><li>prompt 越长越贵、越不稳</li><li>知识没沉进权重，模型没真变强</li><li>易过拟合，要与 RM 对齐</li></ul></div></div>
   </div>
-  <div class="lead">PE 是最快验证"尺子怎么打"的手段：先用 prompt 试方向，再决定要不要训进模型。</div>
+  <div class="lead">PE 是最快验证"卡尺怎么打"的手段：先用 prompt 试方向，再决定要不要训进模型。</div>
 </section>
 
 <section class="blk" id="s30">
@@ -536,7 +536,8 @@
   <h2><span class="idx">33</span>训练之外的轻杠杆（三）· 知识层：给 Agent 一个「活的 wiki」</h2>
   <div class="sub">不训练、不改 prompt——把知识沉成 markdown 文件库，让 Agent 自己读、自己改、自己连。</div>
   <div class="cols">
-    <div class="col"><div class="card"><h3>RAG · 查询时现拼</h3><ul><li>每次从原始文档切片召回</li><li>反复读同样的事实</li><li>无沉淀、易出错、费 token</li></ul></div></div>
+    <div class="col"><div class="card"><h3>RAG · 一次性切片召回</h3><ul><li>每次从原始文档切片召回</li><li>反复读同样的事实</li><li>无沉淀、易出错、费 token</li></ul></div></div>
+    <div class="col"><div class="card"><h3>Agentic Search · 主动多轮检索</h3><ul><li>自己判断够没够，多轮调工具</li><li>按需深入、边检索边推理</li><li>覆盖率、时效强于一次性召回</li></ul></div></div>
     <div class="col"><div class="card"><h3>LLM Wiki · 预先合成</h3><ul><li>概念 = 1 个 md 文件，互相链接成图</li><li>Agent 读 / 改 / 连成「活的记忆」</li><li>合成提前做，省 token、更准</li></ul></div></div>
   </div>
   <div class="note">Google 把它标准化为 <b>OKF</b>（Open Knowledge Format，2026-06）：md 目录 + YAML frontmatter（唯一必填 type，余 title/description/resource/tags/timestamp）+ index.md / log.md。</div>
@@ -588,7 +589,7 @@
 </section>
 
 <section class="blk" id="s38">
-  <h2><span class="idx">37</span>Reward Hacking：模型会"骗尺子"，所以要对抗样本</h2>
+  <h2><span class="idx">37</span>Reward Hacking：模型会"骗卡尺"，所以要对抗样本</h2>
   <div class="sub">长时间没法把 RM 调到理想态——它很容易被 hack。</div>
   <table>
     <thead><tr><th>Hacking 姿势</th><th>表现</th></tr></thead>
@@ -613,7 +614,7 @@
 </section>
 
 <section class="blk" id="s40">
-  <h2><span class="idx">39</span>GroundTruth 评测集：尺子到底对不对的最后兜底</h2>
+  <h2><span class="idx">39</span>GroundTruth 评测集：卡尺到底对不对的最后兜底</h2>
   <div class="cols">
     <div class="col"><div class="card"><h3>它要包含什么</h3><ul><li>用户真实场景 / 真实 query 分布</li><li>高质量人工数据</li><li>对抗样本（Code 样本）</li><li>足够多样性（用户视角天然偏头部）</li></ul></div></div>
     <div class="col"><div class="card"><h3>两个误区</h3><ul><li>别拿评测集直接蒸馏 RM：会过拟合、对齐内部标准</li><li>别只看全局指标</li><li><b>正解：</b>用评测集的度量方案去生成 RM，但不用评测集本身。</li></ul></div></div>
@@ -665,10 +666,10 @@
 <section class="blk" id="s44">
   <h2><span class="idx">43</span>总结：关键手段，与新人最容易踩的红线</h2>
   <div class="cols">
-    <div class="col"><div class="card"><h3>四类关键优化手段</h3><ul><li>维度评估标准准不准（尺子刻歪）</li><li>维度在 RM 里的权重</li><li>Tool / 召回的原材料质量</li><li>训练集——构造 hard example</li></ul></div></div>
+    <div class="col"><div class="card"><h3>四类关键优化手段</h3><ul><li>维度评估标准准不准（卡尺刻歪）</li><li>维度在 RM 里的权重</li><li>Tool / 召回的原材料质量</li><li>训练集——构造 hard example</li></ul></div></div>
     <div class="col"><div class="card"><h3>新人六条红线</h3><ul><li>先有度量定义，才有优化逻辑</li><li>别用线性加权 merge</li><li>别让合成数据自产自销</li><li>别用评测集蒸馏 RM</li><li>别只看全局指标</li><li>警惕离线涨、线上不涨</li></ul></div></div>
   </div>
-  <div class="lead">定义好尺子 → 教给模型 → 让用户验收 → 顺着 badcase 修每一节。<b>LLM is all you need！</b></div>
+  <div class="lead">定义好卡尺 → 教给模型 → 让用户验收 → 顺着 badcase 修每一节。<b>LLM is all you need！</b></div>
 </section>
 
 </main>
@@ -678,7 +679,7 @@
   <div>如何优化 AI 产品——从「度量」到全链路优化</div>
   <div>分享人 <b>Leo</b> · 京东健康 AI 负责人 & 医疗健康大模型负责人</div>
   <div style="margin-top:6px;color:#9aa4b2;font-size:14px;">前菜鸟 AI 负责人 · 蚂蚁金服金融 AI 负责人 & 金融大模型负责人 · SIGKDD 高级领域主席</div>
-  <div style="margin-top:14px;color:#9aa4b2;">尺子做对了，优化才有方向 · Leo · 京东健康</div>
+  <div style="margin-top:14px;color:#9aa4b2;">卡尺校准了，优化才有方向 · Leo · 京东健康</div>
 </footer>
 
 </body>
